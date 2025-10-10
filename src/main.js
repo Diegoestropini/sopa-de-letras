@@ -4,11 +4,19 @@ import { WordSearch } from './word-search.js';
 
 export { WordPlacer, WordSelection, WordSearch };
 
+if (typeof window !== 'undefined') {
+  window.__SOPA_READY__ = window.__SOPA_READY__ || 'module-loading';
+}
+
 const app = document.getElementById('app');
 const wordListEl = document.getElementById('wordList');
 const sizeInput = document.getElementById('sizeInput');
 const regenBtn = document.getElementById('regenBtn');
 const toastContainer = document.getElementById('toastContainer');
+const shouldInitModule =
+  typeof window === 'undefined' ||
+  window.__SOPA_READY__ === undefined ||
+  window.__SOPA_READY__ === 'module-loading';
 
 const CANDIDATE_WORDS = [
   'JAVASCRIPT','CODIGO','CLASE','OBJETO','METODO','EVENTO','SOPA','LETRAS','GRID','RATON','TECLADO','DOM',
@@ -54,14 +62,17 @@ export function buildGame() {
   ws.generate();
   ws.render(wordListEl, showToast);
   showToast('Nueva sopa generada', 'info');
+  if (typeof window !== 'undefined') {
+    window.__SOPA_READY__ = 'module';
+  }
   return ws;
 }
 
-if (regenBtn) {
+if (shouldInitModule && regenBtn) {
   regenBtn.addEventListener('click', buildGame);
 }
 
-if (app && wordListEl && sizeInput) {
+if (shouldInitModule && app && wordListEl && sizeInput) {
   buildGame();
 }
 

@@ -56,7 +56,7 @@ export function showToast(message, kind = 'success') {
 let ws = null;
 
 export function buildGame() {
-  const size = Math.max(6, Math.min(20, Number(sizeInput.value) || 12));
+  const size = Math.max(6, Math.min(10, Number(sizeInput.value) || 10));
   sizeInput.value = String(size);
   const words = pickRandomWords(size);
   ws = new WordSearch(size, words, app);

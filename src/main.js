@@ -30,7 +30,8 @@ const CANDIDATE_WORDS = [
 
 export function pickRandomWords(size) {
   const maxCount = Math.min(12, Math.max(8, Math.floor(size)));
-  const pool = CANDIDATE_WORDS.filter((w) => w.length >= 3 && w.length <= size);
+  const maxLength = Math.min(size, 9);
+  const pool = CANDIDATE_WORDS.filter((w) => w.length >= 3 && w.length <= maxLength);
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];

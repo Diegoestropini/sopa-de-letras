@@ -23,6 +23,7 @@ export class WordSelection {
 
   _bind() {
     this.boardEl.addEventListener('click', (e) => this._onClick(e));
+    this.boardEl.addEventListener('keydown', (e) => this._onKeyDown(e));
   }
 
   _cellFromEvent(e) {
@@ -34,6 +35,9 @@ export class WordSelection {
   _clearSelecting() {
     for (const el of this.boardEl.querySelectorAll('.cell.selecting')) {
       el.classList.remove('selecting');
+      if (!el.classList.contains('resolved')) {
+        this._updateCellAccessibility(el, 'idle');
+      }
     }
   }
 
@@ -41,7 +45,31 @@ export class WordSelection {
     this._clearSelecting();
     for (const { r, c } of path) {
       const el = this.cellEls.get(`${r},${c}`);
-      if (el && !el.classList.contains('resolved')) el.classList.add('selecting');
+      if (el && !el.classList.contains('resolved')) {
+        this._updateCellAccessibility(el, 'selecting');
+      }
+    }
+  }
+
+  _updateCellAccessibility(el, state) {
+    const letter = el.dataset.letter || el.textContent;
+    if (state === 'resolved') {
+      el.classList.add('resolved');
+      el.classList.remove('selecting');
+      el.setAttribute('aria-selected', 'true');
+      el.setAttribute('aria-label', `Letra ${letter}. Resuelta`);
+      return;
+    }
+    if (state === 'selecting') {
+      el.classList.add('selecting');
+      el.setAttribute('aria-selected', 'true');
+      el.setAttribute('aria-label', `Letra ${letter}. Seleccionando`);
+      return;
+    }
+    el.classList.remove('selecting');
+    if (!el.classList.contains('resolved')) {
+      el.setAttribute('aria-selected', 'false');
+      el.setAttribute('aria-label', `Letra ${letter}. Sin seleccionar`);
     }
   }
 
@@ -79,6 +107,50 @@ export class WordSelection {
   _onClick(e) {
     const cell = this._cellFromEvent(e);
     if (!cell) return;
+    this._handleSelection(cell);
+  }
+
+  _onKeyDown(e) {
+    const target = e.target.closest('.cell');
+    if (!target || !this.boardEl.contains(target)) return;
+    const r = Number(target.dataset.r);
+    const c = Number(target.dataset.c);
+    switch (e.key) {
+      case 'ArrowUp':
+      case 'ArrowDown':
+      case 'ArrowLeft':
+      case 'ArrowRight': {
+        e.preventDefault();
+        const { nextR, nextC } = this._nextCoordsForKey(e.key, r, c);
+        if (nextR !== r || nextC !== c) {
+          const nextEl = this.cellEls.get(`${nextR},${nextC}`);
+          nextEl?.focus();
+        }
+        break;
+      }
+      case 'Enter':
+      case ' ': // Space
+      case 'Spacebar': {
+        e.preventDefault();
+        this._handleSelection({ r, c });
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  _nextCoordsForKey(key, r, c) {
+    let nextR = r;
+    let nextC = c;
+    if (key === 'ArrowUp') nextR = Math.max(0, r - 1);
+    if (key === 'ArrowDown') nextR = Math.min(this.size - 1, r + 1);
+    if (key === 'ArrowLeft') nextC = Math.max(0, c - 1);
+    if (key === 'ArrowRight') nextC = Math.min(this.size - 1, c + 1);
+    return { nextR, nextC };
+  }
+
+  _handleSelection(cell) {
     if (!this.startCell) {
       this.startCell = cell;
       this.currentPath = [cell];
@@ -137,7 +209,7 @@ export class WordSelection {
       if (this._samePath(path, entry.path) || this._samePath(path, this._reversePath(entry.path))) {
         for (const { r, c } of entry.path) {
           const el = this.cellEls.get(`${r},${c}`);
-          if (el) el.classList.add('resolved');
+          if (el) this._updateCellAccessibility(el, 'resolved');
         }
         this.found.add(entry.word);
         this.onResolve?.(entry.word);

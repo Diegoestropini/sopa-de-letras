@@ -8,6 +8,7 @@ export class WordSearch {
     this.mountEl = mountEl;
     this.grid = Array.from({ length: size }, () => Array(size).fill(null));
     this.placed = [];
+    this.liveRegion = null;
   }
 
   generate() {
@@ -32,14 +33,28 @@ export class WordSearch {
     for (let r = 0; r < this.size; r++) {
       for (let c = 0; c < this.size; c++) {
         const cell = document.createElement('div');
+        const letter = this.grid[r][c];
         cell.className = 'cell';
-        cell.textContent = this.grid[r][c];
+        cell.textContent = letter;
         cell.dataset.r = String(r);
         cell.dataset.c = String(c);
+        cell.dataset.letter = letter;
         cell.setAttribute('role', 'gridcell');
+        cell.setAttribute('tabindex', '0');
+        cell.setAttribute('aria-selected', 'false');
+        cell.setAttribute('aria-label', `Letra ${letter}. Sin seleccionar`);
         this.mountEl.appendChild(cell);
       }
     }
+
+    if (!this.liveRegion) {
+      this.liveRegion = document.createElement('div');
+      this.liveRegion.className = 'sr-only';
+      this.liveRegion.setAttribute('aria-live', 'polite');
+      this.liveRegion.setAttribute('aria-atomic', 'true');
+      this.mountEl.insertAdjacentElement('afterend', this.liveRegion);
+    }
+    this.liveRegion.textContent = '';
 
     if (wordListEl) {
       wordListEl.innerHTML = '';
@@ -55,6 +70,9 @@ export class WordSearch {
       const item = document.getElementById(`word-${word}`);
       if (item) item.classList.add('resolved');
       toastFn?.(`¡Correcto! ${word}`, 'success');
+      if (this.liveRegion) {
+        this.liveRegion.textContent = `Palabra ${word} resuelta`;
+      }
       const allResolved = [...(wordListEl?.children || [])].every((li) => li.classList.contains('resolved'));
       if (allResolved) {
         this._celebrate();

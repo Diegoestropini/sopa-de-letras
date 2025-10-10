@@ -270,7 +270,7 @@ class WordSearch {
     return this;
   }
 
-  render(wordListEl) {
+  render(wordListEl, toastFn) {
     // grid styling columns
     this.mountEl.style.gridTemplateColumns = `repeat(${this.size}, var(--cell-size))`;
     this.mountEl.innerHTML = '';
@@ -301,7 +301,7 @@ class WordSearch {
     const selection = new WordSelection(this.mountEl, this.placed, this.size, (word) => {
       const item = document.getElementById(`word-${word}`);
       if (item) item.classList.add('resolved');
-      showToast(`¡Correcto! ${word}`, 'success');
+      toastFn?.(`¡Correcto! ${word}`, 'success');
       // check victory
       const allResolved = [...(wordListEl?.children || [])].every((li) => li.classList.contains('resolved'));
       if (allResolved) {
@@ -373,7 +373,7 @@ class WordSearch {
     const words = pickRandomWords(size);
     ws = new WordSearch(size, words, app);
     ws.generate();
-    ws.render(wordListEl);
+    ws.render(wordListEl, showToast);
     showToast('Nueva sopa generada', 'info');
   }
 

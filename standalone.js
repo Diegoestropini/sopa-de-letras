@@ -470,7 +470,7 @@
     let ws = null;
     function buildGame() {
       const rawSize = Number(sizeInput.value);
-      const size = Math.max(6, Math.min(20, isNaN(rawSize) ? 12 : rawSize));
+      const size = Math.max(6, Math.min(10, isNaN(rawSize) ? 10 : rawSize));
       sizeInput.value = String(size);
       const words = pickRandomWords(size);
       ws = new WordSearch(size, words, app);
